@@ -4,6 +4,16 @@ Just a personal tool to install and deploy Nabu, an AI assistant with Open WebUI
 
 This isn't a product, it's a personal tool I'm hosting here for ease. I won't be accepting feature requests.
 
+## Pre-requisites
+- Docker
+- GPU support
+  - Run the following command to test GPU access:
+    ```
+    sudo docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
+    ```
+- At least 5GB free space
+  - Most space is required for the TTS container, which takes up around 2GB. The rest is space for wiggle room.
+
 ## Installation
 ```
 curl -fsSL https://raw.githubusercontent.com/coolssor/nabu-deploy/refs/heads/main/install-nabu.sh | sudo bash
