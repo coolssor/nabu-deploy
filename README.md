@@ -8,6 +8,10 @@ This isn't a product, it's a personal tool I'm hosting here for ease. I won't be
 ```
 curl -fsSL https://raw.githubusercontent.com/coolssor/nabu-deploy/refs/heads/main/install-nabu.sh | sudo bash
 ```
+### Uninstall
+```
+curl -fsSL https://raw.githubusercontent.com/coolssor/nabu-deploy/refs/heads/main/uninstall-nabu.sh | sudo bash
+```
 
 ## Usage
 Usage: `nabu [COMMAND]`
