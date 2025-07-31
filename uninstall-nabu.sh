@@ -25,7 +25,7 @@ function error_exit() {
 }
 
 # Stop and remove known containers
-containers=(open-webui mcpo ollama tts)
+containers=(open-webui mcpo tts)
 
 echo -e "${BLUE}Stopping and removing Nabu containers...${RESET}"
 for cname in "${containers[@]}"; do
