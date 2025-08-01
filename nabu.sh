@@ -192,7 +192,7 @@ if [[ "$COMMAND" == "deploy" ]]; then
     docker run -d --name open-webui --network nabu --gpus all \
       --env-file /etc/nabu/env/openwebui.env \
       -p 3000:8080 -v open-webui:/app/backend/data \
-      --restart unless-stopped ghcr.io/open-webui/open-webui:cuda
+      --restart unless-stopped ghcr.io/open-webui/open-webui:main
     echo "Waiting for open-webui to be ready..."
     timeout=60; elapsed=0; interval=2
     while true; do
