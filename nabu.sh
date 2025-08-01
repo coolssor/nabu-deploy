@@ -73,7 +73,7 @@ load_env_for_svc(){
     openwebui)
       vars=(OLLAMA_BASE_URL OAUTH_CLIENT_ID OAUTH_CLIENT_SECRET OAUTH_PROVIDER_NAME OPENID_PROVIDER_URL OPENID_REDIRECT_URI ENABLE_OAUTH_SIGNUP WEBUI_URL)
       ;;
-    mcpo|tts) vars=() ;;
+    mcpo|ollama|tts) vars=() ;;
     *) vars=() ;;
   esac
 
@@ -102,21 +102,23 @@ if [[ "$COMMAND" == "deploy" ]]; then
     exit 1
   fi
 
-  read -rep $'What do you want to deploy?\n  [1] open‑webui\n  [2] mcpo\n  [3] tts\n  [4] all\n\nSelect [1‑4]: ' choice
+  read -rep $'What do you want to deploy?\n  [1] open‑webui\n  [2] mcpo\n  [3] ollama\n  [4] tts\n  [5] all\n\nSelect [1‑5]: ' choice
   choice=${choice,,}
 
-  deploy_openwebui=false; deploy_mcpo=false; deploy_tts=false
+  deploy_openwebui=false; deploy_mcpo=false; deploy_ollama=false; deploy_tts=false
   case "$choice" in
     1|open-webui) deploy_openwebui=true ;;
     2|mcpo) deploy_mcpo=true ;;
-    3|tts) deploy_tts=true ;;
-    4|all) deploy_openwebui=true; deploy_mcpo=true; deploy_tts=true ;;
+    3|ollama) deploy_ollama=true ;;
+    4|tts) deploy_tts=true ;;
+    5|all) deploy_openwebui=true; deploy_mcpo=true; deploy_ollama=true; deploy_tts=true ;;
     *) echo "Invalid selection. Aborting."; exit 1 ;;
   esac
 
   # Now load env only for selected services
   $deploy_openwebui && load_env_for_svc openwebui
   $deploy_mcpo && load_env_for_svc mcpo
+  $deploy_ollama && load_env_for_svc ollama
   $deploy_tts && load_env_for_svc tts
 
   read -rp $'\nThis will remove and recreate selected containers.\nContinue? [y/N]: ' confirm
@@ -126,6 +128,27 @@ if [[ "$COMMAND" == "deploy" ]]; then
   fi
 
   docker network inspect nabu >/dev/null 2>&1 || docker network create nabu
+
+  if $deploy_ollama; then
+    echo "Starting ollama container..."
+    mkdir -p /etc/nabu/ollama
+    docker rm -f ollama || true
+    docker run -d --name ollama --network nabu --gpus all \
+      --env-file /etc/nabu/env/ollama.env \
+      -v /etc/nabu/ollama:/root/.ollama \
+      -p 11434:11434 --restart unless-stopped ollama/ollama
+    echo "Waiting for container 'ollama' to be running..."
+    timeout=60; elapsed=0; interval=2
+    while true; do
+      status=$(docker inspect -f '{{.State.Status}}' ollama 2>/dev/null || echo "")
+      if [[ "$status" == "running" ]]; then echo "Container 'ollama' is running."; break; fi
+      sleep $interval; ((elapsed+=interval))
+      if ((elapsed >= timeout)); then echo "Timeout: container 'ollama' did not start."; exit 1; fi
+    done
+    docker exec ollama ollama pull qwen3:8b-q4_K_M
+    docker exec ollama ollama run qwen3:8b-q4_K_M || true
+    echo "ollama is running."
+  fi
 
   if $deploy_openwebui; then
     echo "Starting open‑webui container..."
@@ -217,7 +240,7 @@ if [[ "$COMMAND" == "deploy" ]]; then
   exit 0
 elif [[ "$COMMAND" == "info" ]]; then
   echo "Container information:"
-  for cname in open-webui mcpo tts; do
+  for cname in open-webui mcpo ollama tts; do
     echo; echo "=== $cname ==="
     cid=$(docker ps -a --filter "name=^${cname}$" --format "{{.Names}}")
     if [[ -z "$cid" ]]; then
@@ -227,7 +250,7 @@ elif [[ "$COMMAND" == "info" ]]; then
     health=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}no‑healthcheck{{end}}' "$cname")
     echo "Status: $status"
     echo "Health: $health"
-    case "$cname" in open-webui) int_port=8080 ;; mcpo) int_port=11434 ;; tts) int_port=8880 ;; *) int_port="unknown" ;; esac
+    case "$cname" in open-webui) int_port=8080 ;; mcpo) int_port=8000 ;; ollama) int_port=11434 ;; tts) int_port=8880 ;; *) int_port="unknown" ;; esac
     ip=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$cname")
     echo "Internal IP: $ip"
     echo "Host mapping: $(docker inspect --format '{{range $p,$c:=.NetworkSettings.Ports}}{{$p}}->{{(index $c 0).HostPort}}{{end}}' "$cname")"
@@ -236,4 +259,3 @@ elif [[ "$COMMAND" == "info" ]]; then
 else
   usage
 fi
-
