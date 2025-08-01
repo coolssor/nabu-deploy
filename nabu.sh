@@ -138,17 +138,18 @@ if [[ "$COMMAND" == "deploy" ]]; then
       exit 1
       ;;
   esac
-  choice=${choice,,}
-
-  deploy_openwebui=false; deploy_mcpo=false; deploy_ollama=false; deploy_tts=false
-  case "$choice" in
-    1|open-webui) deploy_openwebui=true ;;
-    2|mcpo) deploy_mcpo=true ;;
-    3|ollama) deploy_ollama=true ;;
-    4|tts) deploy_tts=true ;;
-    5|all) deploy_openwebui=true; deploy_mcpo=true; deploy_ollama=true; deploy_tts=true ;;
-    *) echo "Invalid selection. Aborting."; exit 1 ;;
-  esac
+  if [[ "$mode" == "4" ]]; then
+    choice=${choice,,}
+    deploy_openwebui=false; deploy_mcpo=false; deploy_ollama=false; deploy_tts=false
+    case "$choice" in
+      1|open-webui) deploy_openwebui=true ;;
+      2|mcpo) deploy_mcpo=true ;;
+      3|ollama) deploy_ollama=true ;;
+      4|tts) deploy_tts=true ;;
+      5|all) deploy_openwebui=true; deploy_mcpo=true; deploy_ollama=true; deploy_tts=true ;;
+      *) echo "Invalid selection. Aborting."; exit 1 ;;
+    esac
+  fi
 
   # Now load env only for selected services
   $deploy_openwebui && load_env_for_svc openwebui
