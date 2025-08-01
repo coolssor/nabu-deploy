@@ -39,7 +39,7 @@ status "Installed /bin/nabu"
 # Create /etc/nabu and subdirectories
 echo -e "${BLUE}Setting up directories...${RESET}"
 mkdir -p /etc/nabu/docker || error_exit "Failed to create /etc/nabu/docker"
-status "Created /etc/nabu and /etc/nabu/docker
+status "Created /etc/nabu and /etc/nabu/docker"
 
 # Download Dockerfile
 echo -e "${BLUE}Downloading mcpo.Dockerfile...${RESET}"
