@@ -102,7 +102,42 @@ if [[ "$COMMAND" == "deploy" ]]; then
     exit 1
   fi
 
-  read -rep $'What do you want to deploy?\n  [1] open‑webui\n  [2] mcpo\n  [3] ollama\n  [4] tts\n  [5] all\n\nSelect [1‑5]: ' choice
+  echo $'Choose deployment type:\n  [1] All-in-one (requires GPU)\n  [2] Interface-only (Open WebUI + MCPO)\n  [3] Model-only (Ollama + TTS)\n  [4] Specific (choose services manually)'
+  read -rp "Select [1-4]: " mode
+
+  deploy_openwebui=false; deploy_mcpo=false; deploy_ollama=false; deploy_tts=false
+
+  case "$mode" in
+    1)
+      deploy_openwebui=true
+      deploy_mcpo=true
+      deploy_ollama=true
+      deploy_tts=true
+      ;;
+    2)
+      deploy_openwebui=true
+      deploy_mcpo=true
+      ;;
+    3)
+      deploy_ollama=true
+      deploy_tts=true
+      ;;
+    4)
+      echo $'\nSelect service to deploy:\n  [1] open-webui\n  [2] mcpo\n  [3] ollama\n  [4] tts\n  [5] Cancel'
+      read -rp "Select [1-5]: " choice
+      case "$choice" in
+        1) deploy_openwebui=true ;;
+        2) deploy_mcpo=true ;;
+        3) deploy_ollama=true ;;
+        4) deploy_tts=true ;;
+        *) echo "Cancelled."; exit 0 ;;
+      esac
+      ;;
+    *)
+      echo "Invalid option. Aborting."
+      exit 1
+      ;;
+  esac
   choice=${choice,,}
 
   deploy_openwebui=false; deploy_mcpo=false; deploy_ollama=false; deploy_tts=false
